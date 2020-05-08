@@ -1,17 +1,9 @@
-testcards: testcards.o cards.o
-	g++ testcards.o cards.o -o testcards
+game: cards.cpp main.cpp
+	g++ -g -std=c++11 cards.cpp main.cpp -o game
 
-game: main.o cards.o
-	g++ main.o cards.o -o game
-
-main.o: main.cpp
-	g++ main.cpp -c
-
-cards.o: cards.cpp
-	g++ cards.cpp -c
-
-testcards.o: testcards.cpp
-	g++ testcards.cpp -c
+testcards: cards.cpp  testcards.cpp
+	g++ -g -std=c++11 cards.cpp testcards.cpp -o testcards
 
 clean:
-	rm *.o *.txt a.out testcards game 
+	rm game testcards
+

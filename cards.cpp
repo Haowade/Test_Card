@@ -1,151 +1,151 @@
 //cards.cpp
 //Implementation of the classes defined in cards.h
-#include <iostream>
+
 #include "cards.h"
+#include <string>
+#include <iostream>
 using namespace std;
 
-//Function definitions for Player class
-Player::Player(string name, CardList hand){
-  this->name = name;
-  this->hand = hand;
+
+Player::Player(const Player& source){ 
+	Card *cpy = source.first;
+	first = last = nullptr;
+	while(cpy){
+		this->insert(cpy->combo);
+		cpy = cpy->next;
+	}
 }
 
 Player::~Player(){
+	Card* iter = first;
+	while(iter){
+		Card* tmp = iter;
+		iter = iter->next;
+		delete tmp;
+	}
+	first = nullptr;
+	last = nullptr;
+}	
+
+string Player::getComboAtPos(int n) const{
+	//must be greater than 0 and less than or equal to the size of the hand
+
+	Card* x = this->first;
+	if(n <= 0)
+		return first->combo;
+	if(n >= this->getHandSize())
+		return last->combo;
+	for(int i = 1; i < n; i++){
+		x = x->next;
+	}
+	return x->combo;
 }
 
-string Player::getName() const{
-  return this->name;
-}
-
-//Function definitions for CardList class
-CardList::CardList(){
-  this->head = nullptr;
-  this->tail = nullptr;
-  this->current = nullptr;
-}
-
-CardList::~CardList(){
-}
-
-//adds card to the end of the card list
-void CardList::addCard(string element){
-  Card *a = new Card(element);
-  Node *b = new Node();
-  b->data = a;
-  b->next = nullptr;
-  if(this->head == nullptr){
-    this->head = b;
-    this->tail = head;
-    this->current = head;
-    return;
-  }
-  this->tail->next = b;
-  this->tail = this->tail->next;
-}
-
-void CardList::removeCard(Card &element){
-    if(this->search(element) == false)
-      return;
-    Node *card = findCard(this->head, element.getData());
-    Node *tmp = card->next;
-    //case:
-    if(this->head == card){
-      delete card;
-      this->head = tmp;
-    }
-    else{
-      Node *prev = findCardBefore(this->head, element.getData());
-      if(this->tail == card){
-        delete card;
-        prev->next = nullptr;
-        this->tail = prev;
-      }
-      else{
-        prev->next = tmp;
-        delete card;
-      }
-    }
-}
-
-// returns true if the card is found in the deck, false if not found
-bool CardList::search(const Card &a) const{
-  if(findCard(this->head, a.getData()))
-    return true;
-  return false;
+int Player::getHandSize() const{
+	Card* iter = this->first;
+	int count = 0;
+	while(iter){
+		count++;
+		iter = iter->next;
+	}
+	return count;
 }
 
 
-bool CardList::moveCurrentUp(){
-    if(this->current->next){
-      this->current = this->current->next;
-      return true;
-    }
-    return false;
+
+void Player::insert(const string c){ 
+	Card* n = new Card(c);
+	if(first == nullptr && last == nullptr){
+		//if empty hand, c becomes first card in Player
+		first = n;
+		last = n;
+	}
+	else{
+		//if Player not empty, add c to end of Player
+		Card* temp = last;
+		last = n;
+		temp->next = n;
+	}
+	
 }
 
-Card* CardList::getCurrent() const{
-  return this->current->data;
+void Player::deleteCard(string target){
+	if(target == first->combo){ //if the target = first
+		if(first->next == nullptr){
+			delete first;
+			first = nullptr;
+		}
+		else{
+			Card* tmp = first;
+			first = first->next;
+			delete tmp;
+			tmp = NULL;
+		}
+	}
+	else if(target == last->combo){ //if target = last
+		Card* fix = first;
+		while(fix->next != last){
+			fix = fix->next;
+		}
+		last = fix;
+		fix = fix->next;
+		delete fix;
+		fix = NULL;
+		last->next = nullptr;
+	}
+	else{
+		//link the cards before and after target card and delete target
+		Card* linker = first;
+		while(linker->next->combo != target){
+			linker = linker->next;
+		}
+		Card* temp = linker->next;
+		linker->next = temp->next;
+		delete temp;
+		temp = NULL;
+	}
+	
 }
 
-//sets the head card as the current card
-void CardList::setCurrent(){
-  this->current = this->head;
+bool Player::search(string target){ //return true if target is in Player
+	Card* finder = first;
+	while(finder){
+		if(finder->combo == target)
+			return true;
+		finder = finder->next;
+	}
+	return false;
 }
 
-//private helper functions
-CardList::Node* CardList::findCard(Node *root, string element) const{
-  if(!root)
-    return nullptr;
-  if(root->data->getData() == element)
-    return root;
-  return findCard(root->next, element);
+void Player::takeTurn(Player& other){
+	for(int i = 1; i <= this->getHandSize(); i++){
+		if(other.search(this->getComboAtPos(i))){
+		  cout << this->getName() << " picked matching card " << this->getComboAtPos(i)<<endl;
+			other.deleteCard(this->getComboAtPos(i));
+			this->deleteCard(this->getComboAtPos(i));
+			return;
+		}
+	}
 }
 
-CardList::Node* CardList::findCardBefore(Node *a, string element) const{
-  if(this->search(a->data->getData()) == false)
-    return nullptr;
-  Node *prev = this->head;
-  Node *curr = this->head->next;
-  while(curr){
-    if(curr->data->getData() == element){
-      return prev;
-    }
-    prev = prev->next;
-    curr = curr->next;
-  }
-  return prev;
-}
-//Postconditions: returns a pointer to the Node
 
-//Function definitions for Card class
-Card::Card(string element){
-  this->data = element;
-  this->next = nullptr;
+ostream& operator <<(ostream& out, const Player& p){
+	string playerHand = "";
+	for(int i = 1; i <= p.getHandSize(); i++){
+		playerHand += p.getComboAtPos(i) + "\n";
+	}
+	out << playerHand;
+	return out;
 }
 
-Card::~Card(){
-}
 
-string Card::getData() const{
-  return data;
-}
 
-void Card::printCard(){
-  cout<<this->data<<endl;
-}
-
-//Overloaded operator functions
-ostream& operator<<(ostream &os, const CardList &c){
-  CardList::Node *tmp = c.head;
-  while(tmp){
-    os<<tmp->data->getData()<<endl;
-    tmp = tmp->next;
-  }
-  return os;
-}
-
-bool operator==(const Card &a, const Card &b){
-  if(a.getData() == b.getData())
-    return true;
-  return false;
+bool Player::operator ==(const string other){ //== operator for Card
+	Card* iter = this->first;
+	string fullHand = "";
+	while(iter){
+		fullHand+= iter->combo + "\n";
+		iter = iter->next;
+	}
+	return fullHand == other;
 }

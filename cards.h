@@ -1,59 +1,45 @@
 //cards.h
-//Authors: Chenhao Hu
 //All class declarations go here
-#include <iostream>
-using namespace std;
 
 #ifndef CARDS_H
 #define CARDS_H
+#include <string>
+#include <iostream>
+using namespace std;
 
-class Card{
+
+class Player{	
 public:
-  Card(string element);
-  ~Card();
-  string getData() const;
-  void printCard();
-  friend bool operator==(const Card &a, const Card &b);
+	Player():name(""), first(nullptr), last(nullptr){} //non-parameterized constructor
+	Player(const string Name):name(Name), first(nullptr), last(nullptr){} //parameterized constructor
+	~Player(); //activate Card destructor to delete hand
+	Player(const Player& source); //copy constructor
+	string getName() const{return name;} //accessor functions
+	string getComboAtPos(int n) const;
+	int getHandSize() const;
+	void setName(const string modify){name = modify;}
+	void insert(const string c); 
+	bool search(const string target);
+	void deleteCard(const string target);
+	void takeTurn(Player& other);
+	bool operator ==(const string other); //== operator for Player
+	
 private:
-  string data;
-  Card *next;
+	class Card{
+	public:	
+		Card(string sV):combo(sV), next(nullptr){} //creating a card object
+		string combo; // suit *space* value
+		Card* next; //points to next card in the list, null if no succeeding cards
+	};
+	string name; //of player
+	Card* first; 
+	Card* last;
 };
 
-class CardList{
-public:
-  CardList();
-  ~CardList();
-  void addCard(string element);
-  void removeCard(Card &element);
-  bool search(const Card &a) const;
-  bool moveCurrentUp();
-  Card* getCurrent() const;
-  void setCurrent();
-  friend ostream& operator<<(ostream &os, const CardList &c);
-private:
-  //private member variables
-  struct Node{
-    Card *data;
-    Node *next;
-  };
-  Node *current;
-  Node *head;
-  Node *tail;
+ostream& operator <<(ostream& out, const Player& p);
 
-  Node* findCard(Node *root, string element) const;
-  Node* findCardBefore(Node *a, string element) const;
-};
 
-class Player{
-public:
-  Player(string name, CardList hand);
-  ~Player();
-  string getName() const;
-
-private:
-  string name;
-  CardList hand;
-};
+	
 
 
 #endif
